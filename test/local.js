@@ -87,6 +87,22 @@ describe('Auth Local API', () => {
       });
     });
   });
+  describe('/POST local/signup [password too long]', () => {
+    it('it should do something', done => {
+      const campsi = context.campsi;
+      chai.request(campsi.app)
+        .post('/auth/local/signup')
+        .set('content-type', 'application/json')
+        .send(Object.assign({}, glenda, {password: 'l'.repeat(73)}))
+        .end((err, res) => {
+          if (err) debug(`received an error from chai: ${err.message}`);
+          res.should.have.status(400);
+          res.should.be.json;
+          res.body.should.be.a('object');
+          done();
+        });
+    });
+  });
   describe('/POST local/signup [default]', () => {
     it('it should do something', done => {
       const campsi = context.campsi;
@@ -222,7 +238,7 @@ describe('Auth Local API', () => {
         (cb) => {
           chai.request(campsi.app)
             .get('/auth/local/validate?token=differentFromValidationToken&redirectURI=' +
-                            encodeURIComponent('/trace/local-signup-validate-redirect'))
+              encodeURIComponent('/trace/local-signup-validate-redirect'))
             .end((err, res) => {
               if (err) debug(`received an error from chai: ${err.message}`);
               res.should.have.status(404);
