@@ -11,7 +11,7 @@
     "bcryptjs": "^2.4.3",
     "connect-mongodb-session": "^2.0.3",
     "crypto-js": "^3.1.9-1",
-    "debug": "^3.1.0",
+    "debug": "^4.0.1",
     "edit-url": "^1.0.1",
     "express-session": "^1.15.6",
     "for-in": "^1.0.2",
