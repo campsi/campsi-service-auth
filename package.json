@@ -27,7 +27,7 @@
     "yargs": "^11.1.0"
   },
   "devDependencies": {
-    "async": "^2.6.1",
+    "async": "^3.1.0",
     "campsi": "^1.0.7",
     "campsi-service-trace": "^1.0.2",
     "chai": "^4.1.2",
