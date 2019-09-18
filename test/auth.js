@@ -44,7 +44,7 @@ describe('Auth API', () => {
           res.should.have.status(200);
           res.should.be.json;
           res.body.should.be.a('array');
-          res.body.length.should.be.eq(1);
+          res.body.length.should.be.eq(2);
           res.body[0].should.be.an('object');
           res.body[0].should.have.property('name');
           res.body[0].name.should.be.a('string');
@@ -62,7 +62,7 @@ describe('Auth API', () => {
         .get('/auth/me')
         .end((err, res) => {
           if (err) debug(`received an error from chai: ${err.message}`);
-          res.should.have.status(503);
+          res.should.have.status(401);
           res.should.be.json;
           res.body.should.be.a('object');
           res.body.should.have.property('message');
@@ -118,7 +118,7 @@ describe('Auth API', () => {
         .get('/auth/logout')
         .end((err, res) => {
           if (err) debug(`received an error from chai: ${err.message}`);
-          res.should.have.status(503);
+          res.should.have.status(401);
           res.should.be.json;
           res.body.should.be.a('object');
           res.body.should.have.property('message');
@@ -261,6 +261,51 @@ describe('Auth API', () => {
     });
   });
 
+  describe('list users', () => {
+    it('should list existing users', done => {
+      const campsi = context.campsi;
+      const admin = {
+        email: 'admin@campsi.io',
+        username: 'admin@campsi.io',
+        displayName: 'admin',
+        password: 'password'
+      };
+      createUser(chai, campsi, admin, true).then(adminToken => {
+        campsi.db.collection('__users__').findOneAndUpdate(
+          {email: admin.email},
+          {$set: {isAdmin: true}},
+          {returnOriginal: false}
+        ).then(updateResult => {
+          createUser(chai, campsi, glenda).then(userToken => {
+            chai.request(campsi.app)
+              .get('/auth/users')
+              .set('Authorization', 'Bearer ' + adminToken)
+              .end((err, res) => {
+                if (err) {
+                  debug(err);
+                  return done();
+                }
+                res.should.have.status(200);
+                res.body.should.be.a('array');
+                res.body.length.should.be.equal(2);
+                // glenda
+                const userId = res.body.filter(u => u.email === glenda.email)[0]._id;
+                chai.request(campsi.app)
+                  .get(`/auth/users/${userId}/access_token`)
+                  .set('Authorization', `Bearer ${adminToken}`)
+                  .end((err, res) => {
+                    debug(res.body);
+                    res.should.have.status(200);
+                    res.body.should.have.property('token');
+                    done();
+                  });
+              });
+          });
+        });
+      });
+    });
+  });
+
   describe('invitation', () => {
     it('should create a new user', (done) => {
       const campsi = context.campsi;
@@ -309,12 +354,57 @@ describe('Auth API', () => {
             res.body.should.have.property('id');
             debug(res.body);
             campsi.db.collection('__users__').findOne({email: robert.email}, (err, doc) => {
-              if (err) {
-                return debug(`received an error from chai: ${err.message}`);
-              }
+              if (err) return debug(`received an error from chai: ${err.message}`);
               doc.should.be.a('object');
               res.body.id.should.be.eq(doc._id.toString());
               done();
+            });
+          });
+      });
+    });
+    it('should allow someone else to use the invitation', done => {
+      const campsi = context.campsi;
+      const robert = {
+        displayName: 'Robert Bennett',
+        email: 'robert@agilitation.fr',
+        username: 'robert',
+        password: 'signup!'
+      };
+      createUser(chai, campsi, robert).then(robertToken => {
+        robert.token = robertToken;
+        return createUser(chai, campsi, glenda);
+      }).then(glendaToken => {
+        debug(glendaToken);
+        chai.request(campsi.app)
+          .post('/auth/invitations')
+          .set('content-type', 'application/json')
+          .set('Authorization', 'Bearer ' + glendaToken)
+          .send({
+            email: 'odile@agilitation.fr',
+            data: {projectId: 'testProjectId'}
+          })
+          .end((err, res) => {
+            if (err) return debug(`received an error from chai: ${err.message}`);
+            const invitationToken = res.body.invitationToken;
+            chai.request(campsi.app)
+              .post(`/auth/invitations/${invitationToken.value}`)
+              .set('Authorization', 'Bearer ' + robert.token)
+              .end();
+
+            campsi.on('auth/invitation/accepted', payload => {
+              payload.should.have.property('invitedBy');
+              payload.should.have.property('invitedUserId');
+              payload.should.have.property('data');
+              payload.data.projectId.should.eq('testProjectId');
+
+              chai.request(campsi.app)
+                .post(`/auth/invitations/${invitationToken.value}`)
+                .set('Authorization', 'Bearer ' + glendaToken)
+                .end((err, res) => {
+                  if (err) return debug(`received an error from chai: ${err.message}`);
+                  res.should.have.status(404);
+                  done();
+                });
             });
           });
       });

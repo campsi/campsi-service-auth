@@ -15,10 +15,20 @@ campsi.mount('auth', new services.Auth(config.services.auth));
 
 campsi.on('campsi/ready', () => {
   debug('ready');
-  campsi.listen(config.port);
+  if (process.env.HTTPS) {
+    const https = require('https');
+    const fs = require('fs');
+    const path = require('path');
+    https.createServer({
+      key: fs.readFileSync(path.resolve('../cert/server.key')),
+      cert: fs.readFileSync(path.resolve('../cert/server.crt'))
+    }, campsi.app).listen(config.port);
+  } else {
+    campsi.listen(config.port);
+  }
 });
 
-campsi.on('auth/local/passwordResetTokenCreated', user => {
+campsi.on('auth/local/passwordResetTokenCreated', ({ user }) => {
   debug('passwordResetTokenCreated', user.identities.local.passwordResetToken);
 });
 
