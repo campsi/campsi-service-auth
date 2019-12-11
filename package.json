@@ -8,7 +8,7 @@
     "url": "git://github.com/campsi/campsi-service-auth.git"
   },
   "dependencies": {
-    "@passport-next/passport": "^2.1.1",
+    "@passport-next/passport": "^3.1.0",
     "@passport-next/passport-facebook": "^3.1.1",
     "@passport-next/passport-google-oauth2": "^1.0.0",
     "@passport-next/passport-http-bearer": "^1.2.0",
