@@ -18,7 +18,7 @@
     "axios": "^0.18.0",
     "bcryptjs": "^2.4.3",
     "connect-mongodb-session": "^2.1.1",
-    "crypto-js": "^3.1.9-1",
+    "crypto-js": "^3.2.1",
     "debug": "^3.2.6",
     "edit-url": "^1.0.1",
     "express-session": "^1.16.1",
