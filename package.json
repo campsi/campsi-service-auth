@@ -34,7 +34,7 @@
     "campsi-service-trace": "^1.0.2",
     "chai": "^4.2.0",
     "chai-http": "^4.3.0",
-    "config": "^1.31.0",
+    "config": "^3.2.6",
     "coveralls": "^3.0.3",
     "depcheck": "^0.7.2",
     "eslint": "^5.16.0",
