@@ -23,7 +23,7 @@
     "edit-url": "^1.0.1",
     "express-session": "^1.16.1",
     "for-in": "^1.0.2",
-    "mongo-uri-builder": "^1.0.3",
+    "mongo-uri-builder": "^3.0.2",
     "passport-github2": "^0.1.10",
     "uuid": "^3.3.2",
     "yargs": "^11.1.0"
